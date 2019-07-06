@@ -11,6 +11,10 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/uploads/*/*
+/data/github.json
+/data/creds.json
+/data/*.key
 
 # Runtime data
 pids
