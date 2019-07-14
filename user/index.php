@@ -3,6 +3,7 @@ namespace User;
 use \shgysk8zer0\PHPAPI\{PDO, User, Headers, HTTPException, API};
 use \shgysk8zer0\PHPAPI\Abstracts\{HTTPStatusCodes as HTTP};
 use function \Functions\{is_pwned};
+use \Throwable;
 
 require_once(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'autoloader.php');
 
@@ -35,15 +36,8 @@ try {
 			} else {
 				throw new HTTPException('Error registering user', HTTP::UNAUTHORIZED);
 			}
-		} catch (\Throwable $e) {
-			Headers::status(HTTP::INTERNAL_SERVER_ERROR);
-			Headers::contentType('application/json');
-			exit(json_encode([
-				'message' => $e->getMessage(),
-				'file'    => $e->getFile(),
-				'line'    => $e->getLine(),
-				'trace'   => $e->getTrace(),
-			]));
+		} catch (HTTPEXception $e) {
+			throw $e;
 		}
 	});
 
@@ -66,7 +60,5 @@ try {
 
 	$api();
 } catch (HTTPException $e) {
-	Headers::status($e->getCode());
-	Headers::contentType('application/json');
-	echo json_encode($e);
+	throw $e;
 }
