@@ -1,8 +1,9 @@
 <?php
 namespace Consts;
 
-const DEBUG             = true;
+define(__NAMESPACE__ . '\DEBUG', $_SERVER['HTTP_HOST'] === 'localhost');
 const BASE              = __DIR__ . DIRECTORY_SEPARATOR;
+const CLASSES_DIR       = '../../';//BASE . 'classes' . DIRECTORY_SEPARATOR;
 const DATA_DIR          = BASE . 'data' . DIRECTORY_SEPARATOR;
 const LOGS_DIR          = BASE . 'logs' . DIRECTORY_SEPARATOR;
 const UPLOADS_DIR       = BASE . 'uploads' . DIRECTORY_SEPARATOR;
@@ -20,8 +21,8 @@ const AUTOLOAD_EXTS     = [
 	'.php',
 ];
 const INCLUDE_PATH      = [
-	'/home/shgysk8zer0/Projects/',
-	// __DIR__,
+	CLASSES_DIR,
+	DATA_DIR,
 ];
 
 const CSP_ALLOWED_HEADERS = [

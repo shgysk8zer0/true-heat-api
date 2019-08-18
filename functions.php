@@ -60,6 +60,16 @@ function exception_handler(Throwable $e)
 		log_exception($e);
 		Headers::status(Headers::INTERNAL_SERVER_ERROR);
 		Headers::contentType('application/json');
+		$error = [
+			'message' => 'Internal Server Error',
+			'status'  => Headers::INTERNAL_SERVER_ERROR,
+		];
+		if (DEBUG) {
+			$error['file']  = $e->getFile();
+			$error['line']  = $e->getLine();
+			$error['code']  = $e->getCode();
+			$error['trace'] = $e->getTrace();
+		}
 		exit(json_encode([
 			'error' => [
 				'message' => 'Internal Server Error',
