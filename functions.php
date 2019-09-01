@@ -106,7 +106,10 @@ function log_exception(Throwable $e): bool
 
 	$url = URL::getRequestUrl();
 	unset($url->password);
+	$url->search = '';
 	$code = $e->getCode();
+	error_log($e->getMessage(), 4, BASE . 'errors.log');
+
 
 	return $stm->execute([
 		':type'    => get_class($e),
