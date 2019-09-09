@@ -102,6 +102,8 @@ function get_user(InputData $data): ?User
 		if ($user->login($data->get('username', false), $data->get('password', false))) {
 			return $user;
 		}
+	} else {
+		return null;
 	}
 }
 
