@@ -71,6 +71,42 @@ try {
 					if (isset($results->contractor)) {
 						$results->contractor = get_person($pdo, $results->contractor);
 					}
+
+					$notes = $pdo->prepare('SELECT
+						`Note`.`uuid`,
+						`Note`.`status`,
+						`Note`.`text`,
+						`Note`.`created`,
+						`Note`.`updated`,
+						`Person`.`givenName`,
+						`Person`.`familyName`
+					FROM `Note`
+					LEFT OUTER JOIN `Person` ON `Note`.`author` = `Person`.`id`
+					WHERE `Note`.`claim` = :claim;');
+
+					$attachments = $pdo->prepare('SELECT `Attachment`.`uuid`,
+						`Attachment`.`path`,
+						`Attachment`.`size`,
+						`Attachment`.`mime`,
+						`Attachment`.`created`,
+						`Person`.`identifier` AS `userUUID`,
+						`Person`.`givenName`,
+						`Person`.`familyName`
+						FROM `Attachment`
+						LEFT OUTER JOIN `Person` ON `Attachment`.`uploadedBy` = `Person`.`id`
+						WHERE `Attachment`.`claim` = :claim;');
+					if ($notes->execute([':claim' => $results->uuid])) {
+						$results->notes = $notes->fetchAll();
+					} else {
+						$results->notes = [];
+					}
+
+					if ($attachments->execute([':claim' => $results->uuid])) {
+						$results->attachments = $attachments->fetchAll();
+					} else {
+						$results->attachments = [];
+					}
+
 				} else {
 					throw new HTTPException('Claim not found', HTTP::NOT_FOUND);
 				}
