@@ -4,34 +4,13 @@ namespace Index;
 use \shgysk8zer0\PHPAPI\{PDO, Headers};
 use \Throwable;
 use const \Consts\{CREDS_FILE};
+use function \Functions\{get_organization};
 
 try {
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'autoloader.php';
 
-	$pdo = PDO::load(CREDS_FILE);
-	$stm = $pdo->prepare('SELECT `users`.`password`,
-		`Person`.`givenName`,
-		`Person`.`familyName`,
-		`Person`.`email`,
-		`Person`.`telephone`,
-		`PostalAddress`.`streetAddress`,
-		`PostalAddress`.`postOfficeBoxNumber`,
-		`PostalAddress`.`addressLocality` AS `city`,
-		`PostalAddress`.`addressRegion` AS `state`,
-		`PostalAddress`.`postalCode` AS `zip`,
-		`Organization`.`name` AS `worksFor`,
-		`roles`.`name` as `role`,
-		`users`.`created`,
-		`users`.`updated` FROM `Person`
-	JOIN `users` ON `users`.`person` = `Person`.`id`
-	JOIN `roles` on `users`.`role` = `roles`.`id`
-	JOIN `PostalAddress` on `Person`.`address` = `PostalAddress`.`id`
-	JOIN `Organization` ON `Organization`.`id` = `Person`.`worksFor`
-	WHERE `Person`.`familyName` = :familyName
-	LIMIT 1;');
-
-	$stm->execute([':familyName' => 'Zuber']);
-	$person = $stm->fetchObject();
+	Headers::contentType('application/json');
+	echo json_encode(get_organization(PDO::load(CREDS_FILE), 2));
 	// $person->{'@type'} = 'Person';
 	// $person->{'@context'} = 'https://schema.org';
 

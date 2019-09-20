@@ -3,7 +3,7 @@ namespace Consts;
 
 define(__NAMESPACE__ . '\DEBUG', $_SERVER['HTTP_HOST'] === 'localhost');
 const BASE              = __DIR__ . DIRECTORY_SEPARATOR;
-const CLASSES_DIR       = '../../';//BASE . 'classes' . DIRECTORY_SEPARATOR;
+const CLASSES_DIR       = BASE . 'classes' . DIRECTORY_SEPARATOR;
 const DATA_DIR          = BASE . 'data' . DIRECTORY_SEPARATOR;
 const LOGS_DIR          = BASE . 'logs' . DIRECTORY_SEPARATOR;
 const UPLOADS_DIR       = BASE . 'uploads' . DIRECTORY_SEPARATOR;
