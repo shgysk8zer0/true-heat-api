@@ -11,18 +11,20 @@ use const \Consts\{
 	HMAC_FILE,
 	CREDS_FILE,
 	CSP_ALLOWED_HEADERS,
+	TOKEN_EXPIRES,
 	HOST
 };
 
 use \shgysk8zer0\PHPAPI\{API, User, PDO, UploadFile, RandomString};
-use \shgysk8zer0\PHPAPI\Schema\{Thing};
+// use \shgysk8zer0\PHPAPI\Schema\{Thing};
 
 require_once(__DIR__ . DIRECTORY_SEPARATOR . 'shims.php');
 require_once(__DIR__ . DIRECTORY_SEPARATOR . 'consts.php');
 require_once(__DIR__ . DIRECTORY_SEPARATOR . 'functions.php');
 
 try {
-	set_include_path(join(INCLUDE_PATH, PATH_SEPARATOR) . PATH_SEPARATOR . get_include_path());
+	header('X-ALLOWED-HEADERS: '. join(' ', CSP_ALLOWED_HEADERS));
+	set_include_path(join(array_map('realpath', INCLUDE_PATH), PATH_SEPARATOR) . PATH_SEPARATOR . get_include_path());
 	spl_autoload_register(AUTOLOADER);
 	spl_autoload_extensions(join(AUTOLOAD_EXTS, ','));
 
@@ -34,12 +36,16 @@ try {
 		(new RandomString(30, true, true, true, true))->saveAs(HMAC_FILE);
 	}
 
+	if (@is_array(TOKEN_EXPIRES)) {
+		User::setExpires(TOKEN_EXPIRES['value'], TOKEN_EXPIRES['units']);
+	}
+
 	User::setKey(file_get_contents(HMAC_FILE));
 	UploadFile::setHost(HOST);
 
-	// if (FILE_EXISTS(CREDS_FILE)) {
-	// 	PDO::setCredsFile(CREDS_FILE);
-	// }
+	if (FILE_EXISTS(CREDS_FILE)) {
+		PDO::setCredsFile(CREDS_FILE);
+	}
 
 	// Thing::setPDO(PDO::load());
 	API::allowHeaders(...CSP_ALLOWED_HEADERS);

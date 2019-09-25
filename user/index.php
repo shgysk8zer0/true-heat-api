@@ -3,6 +3,9 @@ namespace User;
 use \shgysk8zer0\PHPAPI\{PDO, User, Headers, HTTPException, API};
 use \shgysk8zer0\PHPAPI\Abstracts\{HTTPStatusCodes as HTTP};
 use function \Functions\{is_pwned};
+use \Throwable;
+use \DateTime;
+use \StdClass;
 
 require_once(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'autoloader.php');
 
@@ -20,7 +23,53 @@ try {
 			if (! $user->loggedIn) {
 				throw new HTTPException('User data expired or invalid', HTTP::UNAUTHORIZED);
 			} else {
-				echo json_encode($user);
+				$stm = PDO::load()->prepare('SELECT `users`.`uuid` AS `identifier`,
+					`roles`.`name` AS `role`,
+					`users`.`created`,
+					`Person`.`honorificPrefix`,
+					`Person`.`givenName`,
+					`Person`.`additionalName`,
+					`Person`.`familyName`,
+					`Person`.`gender`,
+					`Person`.`birthDate`,
+					`Person`.`email`,
+					`Person`.`telephone`,
+					`PostalAddress`.`streetAddress`,
+					`PostalAddress`.`postOfficeBoxNumber`,
+					`PostalAddress`.`addressLocality`,
+					`PostalAddress`.`addressRegion`,
+					`PostalAddress`.`postalCode`,
+					`PostalAddress`.`addressCountry`,
+					`ImageObject`.`url` AS `image`,
+					`Person`.`jobTitle`,
+					`Organization`.`name` AS `worksFor`
+				FROM `users`
+				JOIN `Person` ON `users`.`person` = `Person`.`id`
+				LEFT OUTER JOIN `ImageObject` ON `Person`.`image` = `ImageObject`.`id`
+				LEFT OUTER JOIN `Organization` ON `Person`.`worksFor` = `Organization`.`id`
+				LEFT OUTER JOIN `PostalAddress` ON `Person`.`address` = `PostalAddress`.`id`
+				LEFT OUTER JOIN `roles` ON `users`.`role` = `roles`.`id`;');
+
+				$stm->execute();
+				$users = array_map(function(object $user): object
+				{
+					$user->{'@context'} = 'https://schema.org';
+					$user->{'@type'} = 'Person';
+					$user->created = (new DateTime("{$user->created}Z"))->format(DateTime::W3C);
+					$user->address = new StdClass();
+					$user->address->{'@type'} = 'PostalAddress';
+					$user->address->streetAddress = $user->streetAddress;
+					$user->address->postOfficeBoxNumber = $user->postOfficeBoxNumber;
+					$user->address->addressLocality = $user->addressLocality;
+					$user->address->addressRegion = $user->addressRegion;
+					$user->address->postalCode = $user->postalCode;
+					$user->address->addressCountry = $user->addressCountry;
+					unset($user->streetAddress, $user->postOfficeBoxNumber,
+					$user->addressLocality, $user->addressRegion, $user->postalCode,
+					$user->addressCountry);
+					return $user;
+				}, $stm->fetchAll());
+				echo json_encode($users);
 			}
 		}
 	});
@@ -35,15 +84,8 @@ try {
 			} else {
 				throw new HTTPException('Error registering user', HTTP::UNAUTHORIZED);
 			}
-		} catch (\Throwable $e) {
-			Headers::status(HTTP::INTERNAL_SERVER_ERROR);
-			Headers::contentType('application/json');
-			exit(json_encode([
-				'message' => $e->getMessage(),
-				'file'    => $e->getFile(),
-				'line'    => $e->getLine(),
-				'trace'   => $e->getTrace(),
-			]));
+		} catch (HTTPEXception $e) {
+			throw $e;
 		}
 	});
 
@@ -66,7 +108,5 @@ try {
 
 	$api();
 } catch (HTTPException $e) {
-	Headers::status($e->getCode());
-	Headers::contentType('application/json');
-	echo json_encode($e);
+	throw $e;
 }

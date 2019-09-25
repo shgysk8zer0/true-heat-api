@@ -10,15 +10,14 @@ try {
 
 	$api->on('POST', function(API $api): void
 	{
-		if ($api->accept !== 'application/json') {
-			throw new HTTPException('Accept header must be "application/json"', Headers::NOT_ACCEPTABLE);
-		} else  if ($api->post->has('username', 'password')) {
+		if ($api->post->has('username', 'password')) {
 			$user = new User(PDO::load());
 
 			if (
 				$user->login($api->post->get('username', false), $api->post->get('password', false))
 				and API::isEmail($api->post->get('username', false))
 			) {
+				Headers::contentType('application/json');
 				echo json_encode($user);
 			} else {
 				throw new HTTPException('Invalid username or password', Headers::UNAUTHORIZED);
