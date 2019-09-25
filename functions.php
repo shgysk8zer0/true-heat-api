@@ -9,6 +9,20 @@ use \DateTime;
 use \Throwable;
 use \ErrorException;
 
+/**
+ * @see https://www.php.net/manual/en/function.mail.php
+  */
+function email(
+	string $to,
+	string $subject,
+	string $body,
+	?array $headers = [],
+	?array $params  = []
+): bool
+{
+	return true;
+}
+
 function get_person(PDO $pdo, int $id): ?object
 {
 	static $stm = null;
