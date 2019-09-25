@@ -11,6 +11,7 @@ use const \Consts\{
 	HMAC_FILE,
 	CREDS_FILE,
 	CSP_ALLOWED_HEADERS,
+	TOKEN_EXPIRES,
 	HOST
 };
 
@@ -22,6 +23,7 @@ require_once(__DIR__ . DIRECTORY_SEPARATOR . 'consts.php');
 require_once(__DIR__ . DIRECTORY_SEPARATOR . 'functions.php');
 
 try {
+	header('X-ALLOWED-HEADERS: '. join(' ', CSP_ALLOWED_HEADERS));
 	set_include_path(join(array_map('realpath', INCLUDE_PATH), PATH_SEPARATOR) . PATH_SEPARATOR . get_include_path());
 	spl_autoload_register(AUTOLOADER);
 	spl_autoload_extensions(join(AUTOLOAD_EXTS, ','));
@@ -32,6 +34,10 @@ try {
 
 	if (! file_exists(HMAC_FILE)) {
 		(new RandomString(30, true, true, true, true))->saveAs(HMAC_FILE);
+	}
+
+	if (@is_array(TOKEN_EXPIRES)) {
+		User::setExpires(TOKEN_EXPIRES['value'], TOKEN_EXPIRES['units']);
 	}
 
 	User::setKey(file_get_contents(HMAC_FILE));

@@ -25,6 +25,7 @@ try {
 					JSON_OBJECT(
 						"@context", "https://schema.org",
 						"@type", "Person",
+						"identifier", `Person`.`identifier`,
 						"givenName", `Person`.`givenName`,
 						"additionalName", `Person`.`additionalName`,
 						"familyName", `Person`.`familyName`,
@@ -34,6 +35,7 @@ try {
 						"jobTitle", `Person`.`jobTitle`,
 						"address", JSON_OBJECT(
 							"@type", "PostalAddress",
+							"identifier", `PostalAddress`.`identifier`,
 							"streetAddress", `PostalAddress`.`streetAddress`,
 							"postOfficeBoxNumber", `PostalAddress`.`postOfficeBoxNumber`,
 							"addressLocality", `PostalAddress`.`addressLocality`,
@@ -43,6 +45,7 @@ try {
 						),
 						"image", JSON_OBJECT(
 							"@type", "ImageObject",
+							"identifier", `ImageObject`.`identifier`,
 							"url", `ImageObject`.`url`,
 							"height", `ImageObject`.`height`,
 							"width", `ImageObject`.`width`
@@ -113,7 +116,7 @@ try {
 			} else {
 				$stm = $pdo->prepare('SELECT JSON_OBJECT (
 					"uuid", `Claim`.`uuid`,
-					"status", `Claim`.`uuid`,
+					"status", `Claim`.`status`,
 					"created", `Claim`.`created`,
 					"customer", JSON_OBJECT (
 						"@context", "https://schema.org",
@@ -125,7 +128,8 @@ try {
 							"identifier", `Organization`.`identifier`,
 							"name", `Organization`.`name`
 						)
-					)
+					),
+					"lead", `Claim`.`lead`
 				) AS `json`
 				FROM `Claim`
 				LEFT OUTER JOIN `Person` ON `Claim`.`customer` = `Person`.`id`
@@ -134,9 +138,11 @@ try {
 
 				$stm->execute();
 
-				$results = array_map(function(object $claim): object
+				$results = array_map(function(object $claim) use ($pdo): object
 				{
-					return json_decode($claim->json);
+					$parsed = json_decode($claim->json);
+					$parsed->lead = get_person($pdo, $parsed->lead);
+					return $parsed;
 				}, $stm->fetchAll());
 
 			}

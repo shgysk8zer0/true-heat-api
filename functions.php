@@ -16,6 +16,7 @@ function get_person(PDO $pdo, int $id): ?object
 	if (is_null($stm)) {
 		$stm = $pdo->prepare('SELECT "https://schema.org" AS `@context`,
 			"Person" AS `@type`,
+			`Person`.`identifier`,
 			`Person`.`honorificPrefix`,
 			`Person`.`givenName`,
 			`Person`.`additionalName`,
@@ -141,12 +142,16 @@ function get_user(InputData $data): ?User
 
 		if ($user->loggedIn) {
 			return $user;
+		} else {
+			return null;
 		}
 	} elseif ($data->has('username', 'password') and filter_var($data->get('username', false))) {
 		$user = new User(PDO::load());
 
 		if ($user->login($data->get('username', false), $data->get('password', false))) {
 			return $user;
+		} else {
+			return null;
 		}
 	} else {
 		return null;

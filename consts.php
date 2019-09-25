@@ -12,7 +12,6 @@ const HMAC_FILE         = DATA_DIR . 'hmac.key';
 const GITHUB_WEBHOOK    = DATA_DIR . 'github.json';
 const SQL_FILE          = DATA_DIR . 'db.sql';
 const ERROR_LOG         = LOGS_DIR . 'errors.log';
-const OPEN_WEATHER_MAP  = DATA_DIR . 'OpenWeatherMap.key';
 const TIMEZONE          = 'America/Los_Angeles';
 const EXCEPTION_HANDLER = '\Functions\exception_handler';
 const ERROR_HANDLER     = '\Functions\error_handler';
@@ -29,6 +28,11 @@ const CSP_ALLOWED_HEADERS = [
 	'Accept',
 	'Content-Type',
 	'Upgrade-Insecure-Requests',
+];
+
+const TOKEN_EXPIRES = [
+	'value' => 5,
+	'units' => 'years',
 ];
 
 define(__NAMESPACE__ . '\HOST', sprintf('%s://%s',
