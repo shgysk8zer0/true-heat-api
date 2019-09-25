@@ -8,7 +8,7 @@ use function \Functions\{get_user, get_person, get_organization};
 use \StdClass;
 use \DateTime;
 
-require_once '../autoloader.php';
+require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'autoloader.php';
 
 try {
 	$api = new API('*');
@@ -114,27 +114,37 @@ try {
 					throw new HTTPException('Claim not found', HTTP::NOT_FOUND);
 				}
 			} else {
-				$stm = $pdo->prepare('SELECT JSON_OBJECT (
-					"uuid", `Claim`.`uuid`,
-					"status", `Claim`.`status`,
-					"created", `Claim`.`created`,
-					"customer", JSON_OBJECT (
-						"@context", "https://schema.org",
-						"@type", "Person",
-						"identifier", `Person`.`identifier`,
-						"givenName", `Person`.`givenName`,
-						"familyName", `Person`.`familyName`,
-						"worksFor", JSON_OBJECT (
-							"identifier", `Organization`.`identifier`,
-							"name", `Organization`.`name`
-						)
-					),
-					"lead", `Claim`.`lead`
-				) AS `json`
-				FROM `Claim`
-				LEFT OUTER JOIN `Person` ON `Claim`.`customer` = `Person`.`id`
-				LEFT OUTER JOIN `Organization` ON `Person`.`worksFor` = `Organization`.`id`
-				LIMIT 0, 30;');
+				$stm = $pdo->prepare(sprintf('SELECT JSON_OBJECT (
+						"uuid", `Claim`.`uuid`,
+						"status", `Claim`.`status`,
+						"created", `Claim`.`created`,
+						"customer", JSON_OBJECT (
+							"@context", "https://schema.org",
+							"@type", "Person",
+							"identifier", `Person`.`identifier`,
+							"givenName", `Person`.`givenName`,
+							"familyName", `Person`.`familyName`,
+							"worksFor", JSON_OBJECT (
+								"identifier", `Organization`.`identifier`,
+								"name", `Organization`.`name`
+							)
+						),
+						"lead", `Claim`.`lead`
+					) AS `json`
+					FROM `Claim`
+					LEFT OUTER JOIN `Person` ON `Claim`.`customer` = `Person`.`id`
+					LEFT OUTER JOIN `Organization` ON `Person`.`worksFor` = `Organization`.`id`
+					WHERE (:all OR `Claim`.`status` = :status)
+					AND (:allow OR `Claim`.`lead` = :user)
+					LIMIT %d, %d;',
+					intval($req->get->get('from', true, 0)),
+					intval($req->get->get('thru', true, 30))
+				));
+
+				$stm->bindValue(':allow', $user->can('listClaims'), PDO::PARAM_BOOL);
+				$stm->bindValue(':user', $user->id, PDO::PARAM_INT);
+				$stm->bindValue(':all', ! $req->get->has('status'), PDO::PARAM_BOOL);
+				$stm->bindValue(':status', $req->get->get('status'));
 
 				$stm->execute();
 
@@ -144,7 +154,6 @@ try {
 					$parsed->lead = get_person($pdo, $parsed->lead);
 					return $parsed;
 				}, $stm->fetchAll());
-
 			}
 
 			Headers::contentType('application/json');
