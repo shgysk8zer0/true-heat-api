@@ -30,6 +30,24 @@ const CSP_ALLOWED_HEADERS = [
 	'Upgrade-Insecure-Requests',
 ];
 
+const ALLOWED_UPLOAD_TYPES = [
+	// Images
+	'image/jpeg',
+	'image/png',
+	// Documents
+	'application/pdf',
+	'application/rtf', // Rich Text
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document' , // Word (.docx)
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // Excell (.xlsx)
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PowerPOint (.pptx)
+	'application/msword', // Word (.doc)
+	'application/vnd.ms-excel', // Excell (.xls)
+	'application/vnd.ms-powerpoint', // PowerPoint (.ppt)
+	'application/vnd.oasis.opendocument.text', // LibreOffice Writer (.odt)
+	'application/vnd.oasis.opendocument.spreadsheet', // LibreOffice Calc (.ods)
+	'application/vnd.oasis.opendocument.presentation', // LibreOffice Impress (.opp)
+];
+
 const TOKEN_EXPIRES = [
 	'value' => 5,
 	'units' => 'years',
