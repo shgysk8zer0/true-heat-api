@@ -26,6 +26,7 @@ try {
 						"@context", "https://schema.org",
 						"@type", "Person",
 						"identifier", `Person`.`identifier`,
+						"name", CONCAT(`Person`.`givenName`, \' \', `Person`.`familyName`),
 						"givenName", `Person`.`givenName`,
 						"additionalName", `Person`.`additionalName`,
 						"familyName", `Person`.`familyName`,
@@ -122,6 +123,7 @@ try {
 							"@context", "https://schema.org",
 							"@type", "Person",
 							"identifier", `Person`.`identifier`,
+							"name", CONCAT(`Person`.`givenName`, " ", `Person`.`familyName`),
 							"givenName", `Person`.`givenName`,
 							"familyName", `Person`.`familyName`,
 							"worksFor", JSON_OBJECT (

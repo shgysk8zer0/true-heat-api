@@ -18,6 +18,7 @@ function get_person(PDO $pdo, int $id): ?object
 			"Person" AS `@type`,
 			`Person`.`identifier`,
 			`Person`.`honorificPrefix`,
+			CONCAT(`Person`.`givenName`, \' \', `Person`.`familyName`) AS `name`,
 			`Person`.`givenName`,
 			`Person`.`additionalName`,
 			`Person`.`familyName`,

@@ -104,7 +104,13 @@ try {
 					]) and $stm->rowCount() === 1) {
 						Headers::status(HTTP::CREATED);
 						Headers::contentType('application/json');
-						echo json_encode(['uuid' => $uuid, 'url' => "{$file->url}"]);
+						echo json_encode([
+							'uuid' => $uuid,
+							'url'  => "{$file->url}",
+							'path' => $file->url->pathname,
+							'size' => $file->size,
+							'mime' => $file->type,
+						]);
 					} else {
 						throw new HTTPException('Error saving upload', HTTP::INTERNAL_SERVER_ERROR);
 					}
