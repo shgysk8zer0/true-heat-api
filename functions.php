@@ -9,7 +9,7 @@ use \DateTime;
 use \Throwable;
 use \ErrorException;
 
-function get_person(PDO $pdo, int $id): ?object
+function get_person(PDO $pdo, $val, string $key = 'id'): ?object
 {
 	static $stm = null;
 
@@ -55,11 +55,11 @@ function get_person(PDO $pdo, int $id): ?object
 		LEFT OUTER JOIN `PostalAddress` on `Person`.`address` = `PostalAddress`.`id`
 		LEFT OUTER JOIN `Organization` ON `Organization`.`id` = `Person`.`worksFor`
 		LEFT OUTER JOIN `ImageObject` ON `ImageObject`.`id` = `Person`.`image`
-		WHERE `Person`.`id` = :id
+		WHERE `Person`.`' . $key . '` = :val
 		LIMIT 1;');
 	}
 
-	if ($stm->execute([':id' => $id])) {
+	if ($stm->execute([":val" => $val])) {
 		$result = $stm->fetchObject();
 		$result->address = json_decode($result->address);
 		$result->image = json_decode($result->image);
@@ -212,20 +212,17 @@ function exception_handler(Throwable $e)
 		Headers::status(Headers::INTERNAL_SERVER_ERROR);
 		Headers::contentType('application/json');
 		$error = [
-			'message' => 'Internal Server Error',
+			'message' =>  DEBUG ? $e->getMessage() : 'Internal Server Error',
 			'status'  => Headers::INTERNAL_SERVER_ERROR,
 		];
 		if (DEBUG) {
-			$error['file']  = $e->getFile();
-			$error['line']  = $e->getLine();
-			$error['code']  = $e->getCode();
-			$error['trace'] = $e->getTrace();
+			$error['file']    = $e->getFile();
+			$error['line']    = $e->getLine();
+			$error['code']    = $e->getCode();
+			$error['trace']   = $e->getTrace();
 		}
 		exit(json_encode([
-			'error' => [
-				'message' => 'Internal Server Error',
-				'status'  => Headers::INTERNAL_SERVER_ERROR,
-			],
+			'error' => $error,
 		]));
 	}
 }
