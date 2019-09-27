@@ -24,6 +24,7 @@ try {
 				"person", JSON_OBJECT(
 					"@context", "https://schema.org",
 					"@type", "Person",
+					"id", `Person`.`id`,
 					"identifier", `Person`.`identifier`,
 					"name", CONCAT(`Person`.`givenName`,  " ", `Person`.`familyName`),
 					"givenName", `Person`.`givenName`,

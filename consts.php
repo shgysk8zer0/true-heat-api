@@ -1,7 +1,7 @@
 <?php
 namespace Consts;
-
-define(__NAMESPACE__ . '\DEBUG', !array_key_exists('HTTP_HOST', $_SERVER) or $_SERVER['HTTP_HOST'] === 'localhost');
+const DEBUG = true;
+// define(__NAMESPACE__ . '\DEBUG', !array_key_exists('HTTP_HOST', $_SERVER) or $_SERVER['HTTP_HOST'] === 'localhost');
 const BASE              = __DIR__ . DIRECTORY_SEPARATOR;
 const CLASSES_DIR       = BASE . 'classes' . DIRECTORY_SEPARATOR;
 const DATA_DIR          = BASE . 'data' . DIRECTORY_SEPARATOR;
