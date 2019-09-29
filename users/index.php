@@ -181,10 +181,10 @@ try {
 
 	$api->on('DELETE', function(API $req): void
 	{
-		if (! $req->get->has('uuid')) {
+		if (! $req->get->has('token')) {
 			throw new HTTPException('Missing token', HTTP::BAD_REQUEST);
 		} elseif (! $req->get->has('uuid')) {
-			throw new HTTPException('Missing user UUDI', HTTP::BAD_REQUEST);
+			throw new HTTPException('Missing user UUID', HTTP::BAD_REQUEST);
 		} elseif (! $user = get_user($req->get)) {
 			throw new HTTPException('Token invalid or expired', HTTP::UNAUTHORIZED);
 		} elseif (! $user->can('deleteUser')) {
