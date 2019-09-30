@@ -1,7 +1,6 @@
 <?php
 namespace Consts;
-const DEBUG = true;
-// define(__NAMESPACE__ . '\DEBUG', !array_key_exists('HTTP_HOST', $_SERVER) or $_SERVER['HTTP_HOST'] === 'localhost');
+
 const BASE              = __DIR__ . DIRECTORY_SEPARATOR;
 const CLASSES_DIR       = BASE . 'classes' . DIRECTORY_SEPARATOR;
 const DATA_DIR          = BASE . 'data' . DIRECTORY_SEPARATOR;
@@ -16,9 +15,16 @@ const TIMEZONE          = 'America/Los_Angeles';
 const EXCEPTION_HANDLER = '\Functions\exception_handler';
 const ERROR_HANDLER     = '\Functions\error_handler';
 const AUTOLOADER        = 'spl_autoload';
+
+const CLI = [
+	'cli',
+	'cli-server',
+];
+
 const AUTOLOAD_EXTS     = [
 	'.php',
 ];
+
 const INCLUDE_PATH      = [
 	CLASSES_DIR,
 	DATA_DIR,
@@ -52,6 +58,15 @@ const TOKEN_EXPIRES = [
 	'value' => 5,
 	'units' => 'years',
 ];
+
+define(__NAMESPACE__ . '\HOSTNAME', array_key_exists('SERVER_NAME', $_SERVER) ? $_SERVER['SERVER_NAME'] : 'localhost');
+define(__NAMESPACE__ . '\PORT', array_key_exists('SERVER_PORT', $_SERVER) ? $_SERVER['SERVER_PORT'] : 80);
+define(__NAMESPACE__ . '\IS_CLI', in_array(PHP_SAPI, CLI));
+define(__NAMESPACE__ . '\HTTPS', array_key_exists('HTTPS', $_SERVER) and ! empty($_SERVER['HTTPS']));
+define(__NAMESPACE__ . '\PROTOCOL', HTTPS ? 'http:': 'https:');
+define(__NAMESPACE__ . '\IS_LOCALHOST', in_array(HOSTNAME, ['localhost']));
+define(__NAMESPACE__ . '\DEBUG', IS_CLI or IS_LOCALHOST);
+define(__NAMESPACE__ . '\DEFAULT_PORT', HTTPS ? PORT === 443 : PORT === 80);
 
 define(__NAMESPACE__ . '\HOST', sprintf('%s://%s',
 	(array_key_exists('HTTPS', $_SERVER) and ! empty($_SERVER['HTTPS'])) ? 'https' : 'http',

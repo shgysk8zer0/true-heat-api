@@ -150,5 +150,7 @@ try {
 
 	$api();
 } catch (HTTPException $e) {
-	throw $e;
+	Headers::status($e->getCode());
+	Headers::contentType('application/json');
+	echo json_encode($e);
 }
