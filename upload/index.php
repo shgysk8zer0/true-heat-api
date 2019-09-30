@@ -4,7 +4,7 @@ namespace Upload;
 use \shgysk8zer0\PHPAPI\{PDO, User, API, Headers, Uploads, Files, UUID, HTTPException};
 use \shgysk8zer0\PHPAPI\Abstracts\{HTTPStatusCodes as HTTP};
 use \Throwable;
-use function \Functions\{upload_path};
+use function \Functions\{upload_path, get_person_id_for_user};
 use const \Consts\{HOST, ALLOWED_UPLOAD_TYPES};
 
 require_once dirname(__DIR__) . DIRECTORY_SEPARATOR . 'autoloader.php';
@@ -100,7 +100,7 @@ try {
 						':path'  => $file->url->pathname,
 						':size'  => $file->size,
 						':mime'  => $file->type,
-						':user'  => $user->id,
+						':user'  => get_person_id_for_user($pdo, $user->id),
 					]) and $stm->rowCount() === 1) {
 						Headers::status(HTTP::CREATED);
 						Headers::contentType('application/json');

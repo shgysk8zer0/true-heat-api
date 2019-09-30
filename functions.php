@@ -112,6 +112,16 @@ function get_organization(PDO $pdo, int $id): ?object
 	}
 }
 
+function get_person_id_for_user(PDO $pdo, int $id):? int
+{
+	$stm = $pdo->prepare('SELECT `person` FROM `users` WHERE `id` = :id LIMIT 1;');
+	if ($stm->execute([':id' => $id]) and $user = $stm->fetchObject()) {
+		return $user->person ?? null;
+	} else {
+		return null;
+	}
+}
+
 function get_address(PDO $pdo, int $id): ?object
 {
 	static $stm = null;
