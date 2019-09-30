@@ -22,6 +22,48 @@ try {
 
 			if (! $user->loggedIn) {
 				throw new HTTPException('User data expired or invalid', HTTP::UNAUTHORIZED);
+			} elseif ($api->get->has('uuid')) {
+				if ($user->can('listUsers')) {
+					$stm = PDO::load()->prepare('SELECT `users`.`uuid` AS `identifier`,
+						`roles`.`name` AS `role`,
+						`roles`.`id` AS `roleId`,
+						`users`.`created`,
+						`Person`.`honorificPrefix`,
+						`Person`.`givenName`,
+						`Person`.`additionalName`,
+						`Person`.`familyName`,
+						`Person`.`gender`,
+						`Person`.`birthDate`,
+						`Person`.`email`,
+						`Person`.`telephone`,
+						`PostalAddress`.`streetAddress`,
+						`PostalAddress`.`postOfficeBoxNumber`,
+						`PostalAddress`.`addressLocality`,
+						`PostalAddress`.`addressRegion`,
+						`PostalAddress`.`postalCode`,
+						`PostalAddress`.`addressCountry`,
+						`ImageObject`.`url` AS `image`,
+						`Person`.`jobTitle`,
+						`Organization`.`name` AS `worksFor`
+					FROM `users`
+					JOIN `Person` ON `users`.`person` = `Person`.`id`
+					LEFT OUTER JOIN `ImageObject` ON `Person`.`image` = `ImageObject`.`id`
+					LEFT OUTER JOIN `Organization` ON `Person`.`worksFor` = `Organization`.`id`
+					LEFT OUTER JOIN `PostalAddress` ON `Person`.`address` = `PostalAddress`.`id`
+					LEFT OUTER JOIN `roles` ON `users`.`role` = `roles`.`id`
+					WHERE `Person`.`identifier` = :uuid
+					OR `users`.`uuid` = :uuid
+					LIMIT 1;');
+
+					if ($stm->execute([':uuid' => $api->get->get('uuid')]) and $found = $stm->fetchObject()) {
+						Headers::contentType('application/json');
+						echo json_encode($found);
+					} else {
+						throw new HTTPException('User not found', HTTP::NOT_FOUND);
+					}
+				} else {
+					throw new HTTPException('You do not have permission for that', HTTP::FORBIDDEN);
+				}
 			} else {
 				$stm = PDO::load()->prepare('SELECT `users`.`uuid` AS `identifier`,
 					`roles`.`name` AS `role`,
