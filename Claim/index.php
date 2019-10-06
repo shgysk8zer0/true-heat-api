@@ -87,14 +87,17 @@ try {
 						$results->contractor = get_person($pdo, $results->contractor, 'identifier');
 					}
 
-					$notes = $pdo->prepare('SELECT
+					$notes_stm = $pdo->prepare('SELECT
 						`Note`.`uuid`,
 						`Note`.`status`,
 						`Note`.`text`,
 						`Note`.`created`,
 						`Note`.`updated`,
-						`Person`.`givenName`,
-						`Person`.`familyName`
+						JSON_OBJECT(
+							"name", CONCAT(`Person`.`givenName`, " ", `Person`.`familyName`),
+							"givenName", `Person`.`givenName`,
+							"familyName", `Person`.`familyName`
+						) AS `author`
 					FROM `Note`
 					LEFT OUTER JOIN `Person` ON `Note`.`author` = `Person`.`id`
 					WHERE `Note`.`claim` = :claim;');
@@ -110,8 +113,14 @@ try {
 						FROM `Attachment`
 						LEFT OUTER JOIN `Person` ON `Attachment`.`uploadedBy` = `Person`.`id`
 						WHERE `Attachment`.`claim` = :claim;');
-					if ($notes->execute([':claim' => $results->uuid])) {
-						$results->notes = $notes->fetchAll();
+
+					if ($notes_stm->execute([':claim' => $results->uuid])) {
+						$results->notes = array_map(function(object $note): object
+						{
+							$note->author = json_decode($note->author);
+							return $note;
+						}, $notes_stm->fetchAll());
+
 					} else {
 						$results->notes = [];
 					}
