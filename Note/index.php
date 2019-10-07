@@ -50,7 +50,7 @@ try {
 				`status`,
 				`text`
 			) VALUES (
-				:uuid,
+				COALESCE(:uuid, UUID()),
 				:author,
 				:claim,
 				:status,
