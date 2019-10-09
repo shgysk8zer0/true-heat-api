@@ -1,13 +1,23 @@
 <?php
 
 namespace Functions;
-use const \Consts\{DEBUG, ERROR_LOG, UPLOADS_DIR, BASE};
+use const \Consts\{DEBUG, ERROR_LOG, UPLOADS_DIR, BASE, COMPOSER_AUTOLOAD};
 use \shgysk8zer0\PHPAPI\{PDO, User, JSONFILE, Headers, HTTPException, Request, URL};
 use \shgysk8zer0\PHPAPI\Interfaces\{InputData};
 use \StdClass;
 use \DateTime;
 use \Throwable;
 use \ErrorException;
+
+function composer_autoloader(): bool
+{
+	if (@file_exists(COMPOSER_AUTOLOAD)) {
+		require_once COMPOSER_AUTOLOAD;
+		return true;
+	} else {
+		return false;
+	}
+}
 
 function get_person(PDO $pdo, $val, string $key = 'id'): ?object
 {

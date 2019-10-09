@@ -3,6 +3,7 @@ namespace Consts;
 
 const BASE              = __DIR__ . DIRECTORY_SEPARATOR;
 const CLASSES_DIR       = BASE . 'classes' . DIRECTORY_SEPARATOR;
+const VENDOR_DIR        = BASE . 'vendor' . DIRECTORY_SEPARATOR;
 const DATA_DIR          = BASE . 'data' . DIRECTORY_SEPARATOR;
 const LOGS_DIR          = BASE . 'logs' . DIRECTORY_SEPARATOR;
 const UPLOADS_DIR       = BASE . 'uploads' . DIRECTORY_SEPARATOR;
@@ -11,6 +12,7 @@ const HMAC_FILE         = DATA_DIR . 'hmac.key';
 const GITHUB_WEBHOOK    = DATA_DIR . 'github.json';
 const SQL_FILE          = DATA_DIR . 'db.sql';
 const ERROR_LOG         = LOGS_DIR . 'errors.log';
+const COMPOSER_AUTOLOAD = VENDOR_DIR . 'autoload.php';
 const TIMEZONE          = 'America/Los_Angeles';
 const EXCEPTION_HANDLER = '\Functions\exception_handler';
 const ERROR_HANDLER     = '\Functions\error_handler';

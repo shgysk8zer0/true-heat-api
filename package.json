@@ -27,6 +27,7 @@
   "homepage": "https://github.com/shgysk8zer0/true-heat-api",
   "scripts": {
     "preinstall": "git submodule update --recursive --init",
+    "postinstall": "composer install",
     "start": "php -S ${npm_package_config_serve_domain}:${npm_package_config_serve_port}",
     "test": "php lint.php"
   }
