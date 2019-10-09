@@ -9,7 +9,7 @@ require_once('./autoloader.php');
 
 if (is_cli()) {
 	$linter = new Linter();
-	$linter->ignoreDirs('./.git', './data', './logs', './classes/shgysk8zer0/phpapi');
+	$linter->ignoreDirs('./.git', './data', './logs', './classes/shgysk8zer0/phpapi', './vendor');
 	$linter->scanExts('php');
 
 	if (! $linter->scan(__DIR__)) {

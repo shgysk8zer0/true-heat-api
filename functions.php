@@ -9,6 +9,13 @@ use \DateTime;
 use \Throwable;
 use \ErrorException;
 
+// @TODO Use PHPMailer
+// @SEE https://github.com/PHPMailer/PHPMailer/blob/master/README.md
+function mail(): bool
+{
+	return true;
+}
+
 function composer_autoloader(): bool
 {
 	if (@file_exists(COMPOSER_AUTOLOAD)) {

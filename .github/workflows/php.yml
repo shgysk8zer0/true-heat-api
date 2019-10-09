@@ -17,8 +17,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Install
+      run: |
+        git submodule update --init --recursive
+        composer install
     - name: PHP Lint
       run: |
-        pwd
-        git submodule update --init --recursive
         php ./lint.php
