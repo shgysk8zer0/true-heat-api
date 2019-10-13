@@ -4,13 +4,13 @@ namespace Index;
 use \shgysk8zer0\PHPAPI\{PDO, Headers};
 use \Throwable;
 use const \Consts\{CREDS_FILE};
-use function \Functions\{get_organization};
+use function \Functions\{get_organization, get_person};
 
 try {
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'autoloader.php';
 
 	Headers::contentType('application/json');
-	echo json_encode(get_organization(PDO::load(CREDS_FILE), 2));
+	echo json_encode(get_person(PDO::load(CREDS_FILE), 'c7ffc7fc-4250-46e8-a1eb-6ccf1fadcf79', 'identifier'), JSON_PRETTY_PRINT);
 	// $person->{'@type'} = 'Person';
 	// $person->{'@context'} = 'https://schema.org';
 
@@ -44,8 +44,8 @@ try {
 	// $person->worksFor->address = $stm2->fetchObject();
 	// $person->worksFor->{'@type'} = 'Organization';
 
-	Headers::contentType('application/json');
-	echo json_encode($person);
+	// Headers::contentType('application/json');
+	// echo json_encode($person);
 } catch (Throwable $e) {
 	header('Content-Type: application/json');
 	echo json_encode([

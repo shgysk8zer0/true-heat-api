@@ -26,16 +26,79 @@ function composer_autoloader(): bool
 	}
 }
 
-function get_person(PDO $pdo, $val, string $key = 'id'): ?object
+function get_user_person_by_uuid(PDO $pdo, $uuid):? object
 {
-	static $stm = null;
+	static $stm =null;
 
 	if (is_null($stm)) {
 		$stm = $pdo->prepare('SELECT "https://schema.org" AS `@context`,
 			"Person" AS `@type`,
+			`users`.`uuid` AS `uuid`,
 			`Person`.`identifier`,
 			`Person`.`honorificPrefix`,
-			CONCAT(`Person`.`givenName`, \' \', `Person`.`familyName`) AS `name`,
+			CONCAT(`Person`.`givenName`, " ", `Person`.`familyName`) AS `name`,
+			`Person`.`givenName`,
+			`Person`.`additionalName`,
+			`Person`.`familyName`,
+			`Person`.`gender`,
+			JSON_OBJECT(
+				"@type", "PostalAddress",
+				"streetAddress", `PostalAddress`.`streetAddress`,
+				"postOfficeBoxNumber", `PostalAddress`.`postOfficeBoxNumber`,
+				"addressLocality", `PostalAddress`.`addressLocality`,
+				"addressRegion", `PostalAddress`.`addressRegion`,
+				"postalCode", `PostalAddress`.`postalCode`,
+				"addressCountry", `PostalAddress`.`addressCountry`
+			) AS `address`,
+			`Person`.`telephone`,
+			`Person`.`email`,
+			`Person`.`jobTitle`,
+			JSON_OBJECT(
+				"@type", "Organization",
+				"identifier", `Organization`.`identifier`,
+				"name", `Organization`.`name`,
+				"telephone", `Organization`.`telephone`,
+				"email", `Organization`.`email`,
+				"url", `Organization`.`url`
+			) AS `worksFor`,
+			JSON_OBJECT(
+				"@type", "ImageObject",
+				"identifier", `ImageObject`.`identifier`,
+				"url", `ImageObject`.`url`,
+				"width", `ImageObject`.`width`,
+				"height", `ImageObject`.`height`,
+				"encodingFormat", `ImageObject`.`encodingFormat`
+			) AS `image`
+		FROM `Person`
+		JOIN `users` ON `users`.`person` = `Person`.`id`
+		LEFT OUTER JOIN `PostalAddress` on `Person`.`address` = `PostalAddress`.`id`
+		LEFT OUTER JOIN `Organization` ON `Organization`.`id` = `Person`.`worksFor`
+		LEFT OUTER JOIN `ImageObject` ON `ImageObject`.`id` = `Person`.`image`
+		WHERE `users`.`uuid` = :uuid
+		LIMIT 1;');
+	}
+
+	if ($stm->execute([":uuid" => $uuid])) {
+		$result = $stm->fetchObject();
+		$result->address = json_decode($result->address);
+		$result->image = json_decode($result->image);
+		$result->worksFor = json_decode($result->worksFor);
+		return $result;
+	} else {
+		return null;
+	}
+}
+
+function get_person(PDO $pdo, $val, string $key = 'id'):? object
+{
+	static $stms = [];
+
+	if (! array_key_exists($key, $stms)) {
+		$stms[$key] = $pdo->prepare('SELECT "https://schema.org" AS `@context`,
+			"Person" AS `@type`,
+			`Person`.`identifier`,
+			`Person`.`honorificPrefix`,
+			CONCAT(`Person`.`givenName`, " ", `Person`.`familyName`) AS `name`,
 			`Person`.`givenName`,
 			`Person`.`additionalName`,
 			`Person`.`familyName`,
@@ -76,12 +139,14 @@ function get_person(PDO $pdo, $val, string $key = 'id'): ?object
 		LIMIT 1;');
 	}
 
-	if ($stm->execute([":val" => $val])) {
+	if ($stm = $stms[$key] and $stm->execute([":val" => $val])) {
 		$result = $stm->fetchObject();
 		$result->address = json_decode($result->address);
 		$result->image = json_decode($result->image);
 		$result->worksFor = json_decode($result->worksFor);
 		return $result;
+	} else {
+		return null;
 	}
 }
 
