@@ -4,7 +4,7 @@ namespace Claim;
 use \shgysk8zer0\PHPAPI\{API, PDO, Headers, User, UUID, HTTPException};
 use \shgysk8zer0\PHPAPI\Schema\{Person};
 use \shgysk8zer0\PHPAPI\Abstracts\{HTTPStatusCodes as HTTP};
-use function \Functions\{get_user, get_person, get_organization};
+use function \Functions\{get_user, get_person, get_organization, get_user_person_by_uuid};
 use \StdClass;
 use \DateTime;
 
@@ -30,14 +30,14 @@ try {
 			$pdo = PDO::load();
 
 			if ($req->get->has('uuid')) {
-				$stm = $pdo->prepare('SELECT `uuid`,
+				$stm = $pdo->prepare('SELECT `Claim`.`uuid`,
 					`status`,
 					`Claim`.`created`,
 					JSON_OBJECT(
 						"@context", "https://schema.org",
 						"@type", "Person",
 						"identifier", `Person`.`identifier`,
-						"name", CONCAT(`Person`.`givenName`, \' \', `Person`.`familyName`),
+						"name", CONCAT(`Person`.`givenName`, " ", `Person`.`familyName`),
 						"givenName", `Person`.`givenName`,
 						"additionalName", `Person`.`additionalName`,
 						"familyName", `Person`.`familyName`,
@@ -64,6 +64,7 @@ try {
 						)
 					) AS `customer`,
 					`contractor`,
+					`assigned`,
 					`lead`,
 					`hours`,
 					`price`
@@ -72,19 +73,15 @@ try {
 				LEFT OUTER JOIN `PostalAddress` ON `Person`.`address` = `PostalAddress`.`id`
 				LEFT OUTER JOIN `Organization` ON `Person`.`worksFor` = `Organization`.`id`
 				LEFT OUTER JOIN `ImageObject` ON `Person`.`image` = `ImageObject`.`id`
-				WHERE `uuid` = :uuid
+				WHERE `Claim`.`uuid` = :uuid
 				LIMIT 1;');
 
 				if ($stm->execute([':uuid' => $req->get->get('uuid')]) and $results = $stm->fetchObject()) {
 					$results->created = (new DateTime("{$results->created}Z"))->format(DateTime::W3C);
 					$results->customer = json_decode($results->customer);
 
-					if (isset($results->lead)) {
-						$results->lead = get_person($pdo, $results->lead, 'identifier');
-					}
-
-					if (isset($results->contractor)) {
-						$results->contractor = get_person($pdo, $results->contractor, 'identifier');
+					if (isset($results->assigned)) {
+						$results->assigned = get_user_person_by_uuid($pdo, $results->assigned);
 					}
 
 					$notes_stm = $pdo->prepare('SELECT
@@ -151,9 +148,11 @@ try {
 								"name", `Organization`.`name`
 							)
 						),
-						"lead", `Claim`.`lead`
+						"lead", `Claim`.`lead`,
+						"assigned", `users`.`person`
 					) AS `json`
 					FROM `Claim`
+					LEFT OUTER JOIN `users` ON `Claim`.`assigned` = `users`.`uuid`
 					LEFT OUTER JOIN `Person` ON `Claim`.`customer` = `Person`.`identifier`
 					LEFT OUTER JOIN `Organization` ON `Person`.`worksFor` = `Organization`.`id`
 					WHERE (:all OR `Claim`.`status` = :status)
@@ -173,7 +172,7 @@ try {
 				$results = array_map(function(object $claim) use ($pdo): object
 				{
 					$parsed = json_decode($claim->json);
-					$parsed->lead = get_person($pdo, $parsed->lead, 'identifier');
+					$parsed->assigned = get_person($pdo, $parsed->assigned, 'id');
 					return $parsed;
 				}, $stm->fetchAll());
 			}
@@ -198,11 +197,23 @@ try {
 			} elseif ($req->post->has('uuid') and strlen($req->post->get('uuid')) !== 0) {
 				if (! $user->can('editClaim')) {
 					throw new HTTPException('You do not have permissions for this action', HTTP::FORBIDDEN);
-				} elseif ($req->post->has('status') and ! $req->post->has('customer')) {
-					$stm = $pdo->prepare('UPDATE `Claim` SET `status` = :status WHERE `uuid` = :uuid LIMIT 1;');
+				} else {
+					$stm = $pdo->prepare('UPDATE `Claim` SET `status` = COALESCE(:status, `status`),
+						`assigned`   = COALESCE(:assigned, `assigned`),
+						`contractor` = COALESCE(:contractor, `contractor`),
+						`lead`       = COALESCE(:lead, `lead`),
+						`hours`      = COALESCE(:hours, `hours`),
+						`price`      = COALESCE(:price, `price`)
+					WHERE `uuid` = :uuid LIMIT 1;');
+
 					if ($stm->execute([
-						':status' => $req->post->get('status'),
-						':uuid'   => $req->post->get('uuid'),
+						':status'     => $req->post->get('status'),
+						':assigned'   => $req->post->get('assigned'),
+						':contractor' => $req->post->get('contractor'),
+						':lead'       => $req->post->get('lead'),
+						':hours'      => $req->post->get('hours'),
+						':price'      => $req->post->get('price'),
+						':uuid'       => $req->post->get('uuid'),
 					]) and $stm->rowCount() !== 0) {
 						Headers::status(HTTP::OK);
 						Headers::contentType('application/json');
@@ -213,8 +224,6 @@ try {
 					} else {
 						throw new HTTPException('Error updating claim status', HTTP::INTERNAL_SERVER_ERROR);
 					}
-				} else {
-					throw new HTTPException('Editing claims is currently disabled', HTTP::NOT_IMPLEMENTED);
 				}
 			} elseif (! $user->can('createClaim')) {
 				throw new HTTPException('You do not have permissions for this action', HTTP::FORBIDDEN);
@@ -222,17 +231,18 @@ try {
 				$pdo->beginTransaction();
 
 				try {
-					// @TODO Figure out how to store contractor & lead
 					$uuid = new UUID();
 					$claim = $pdo->prepare('INSERT INTO `Claim` (
 						`uuid`,
 						`status`,
+						`assigned`,
 						`customer`,
 						`contractor`,
 						`lead`
 					) VALUES (
 						:uuid,
 						:status,
+						:assigned,
 						:customer,
 						:contractor,
 						:lead
@@ -294,6 +304,7 @@ try {
 					} elseif (! $claim->execute([
 						':uuid'       => $uuid,
 						':status'     => $req->post->get('status', true, 'open'),
+						':assigned'   => $req->post->get('assigned'),
 						':customer'   => get_uuid($pdo, 'Person', $customer_id),
 						':contractor' => $req->post->get('contractor'),
 						':lead'       => $req->post->get('lead'),
