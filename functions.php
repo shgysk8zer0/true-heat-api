@@ -228,7 +228,7 @@ function get_address(PDO $pdo, int $id): ?object
 	}
 }
 
-function get_user(InputData $data): ?User
+function get_user(InputData $data):? User
 {
 	if ($data->has('token')) {
 		$user = User::loadFromToken(PDO::load(), $data->get('token', false));
