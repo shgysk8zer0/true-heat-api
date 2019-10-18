@@ -53,8 +53,8 @@ try {
 	$api->on('POST', function(API $request): void
 	{
 		Files::setAllowedTypes(...ALLOWED_UPLOAD_TYPES);
-		if (! $request->post->has('token')) {
-			throw new HTTPException('Missing token in request', HTTP::BAD_REQUEST);
+		if (! $request->post->has('token', 'claim')) {
+			throw new HTTPException('Missing token or claim in request', HTTP::BAD_REQUEST);
 		} else {
 			$user = User::loadFromToken(PDO::load(), $request->post->get('token', false));
 			if (! $user->loggedIn) {
@@ -64,9 +64,6 @@ try {
 			} elseif (! isset($request->files->upload)) {
 				throw new HTTPException('No file uploaded', HTTP::BAD_REQUEST);
 			} elseif ($request->files->upload->error instanceof Throwable) {
-				Headers::status($request->files->upload->error->getCode());
-				Headers::contentType('application/json');
-				exit(json_encode(['$_FILES' => $_FILES, 'request' => $request]));
 				throw $request->files->upload->error;
 			} else {
 				$pdo = PDO::load();
@@ -74,6 +71,7 @@ try {
 				$stm = $pdo->prepare('INSERT INTO `Attachment` (
 					`uuid`,
 					`md5`,
+					`filename`,
 					`claim`,
 					`path`,
 					`size`,
@@ -82,6 +80,7 @@ try {
 				) VALUES (
 					:uuid,
 					:md5,
+					:filename,
 					:claim,
 					:path,
 					:size,
@@ -94,22 +93,24 @@ try {
 				if ($file->saveAs($save_path, true)) {
 					$uuid = new UUID();
 					if ($stm->execute([
-						':uuid'  => $uuid,
-						':md5'   => $file->md5(),
-						':claim' => $request->post->get('claim'),
-						':path'  => $file->url->pathname,
-						':size'  => $file->size,
-						':mime'  => $file->type,
-						':user'  => get_person_id_for_user($pdo, $user->id),
+						':uuid'     => $uuid,
+						':md5'      => $file->md5(),
+						':filename' => $file->name,
+						':claim'    => $request->post->get('claim'),
+						':path'     => $file->url->pathname,
+						':size'     => $file->size,
+						':mime'     => $file->type,
+						':user'     => get_person_id_for_user($pdo, $user->id),
 					]) and $stm->rowCount() === 1) {
 						Headers::status(HTTP::CREATED);
 						Headers::contentType('application/json');
 						echo json_encode([
-							'uuid' => $uuid,
-							'url'  => "{$file->url}",
-							'path' => $file->url->pathname,
-							'size' => $file->size,
-							'mime' => $file->type,
+							'uuid'     => $uuid,
+							'url'      => "{$file->url}",
+							'filename' => $file->name,
+							'path'     => $file->url->pathname,
+							'size'     => $file->size,
+							'mime'     => $file->type,
 						]);
 					} else {
 						throw new HTTPException('Error saving upload', HTTP::INTERNAL_SERVER_ERROR);
