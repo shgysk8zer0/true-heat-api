@@ -10,6 +10,7 @@ const LOGS_DIR          = BASE . 'logs' . DIRECTORY_SEPARATOR;
 const UPLOADS_DIR       = BASE . 'uploads' . DIRECTORY_SEPARATOR;
 const CREDS_FILE        = DATA_DIR . 'creds.json';
 const EMAIL_CREDS       = DATA_DIR . 'email.json';
+const EMAIL_EXPIRES     = '+12 hours';
 const HMAC_FILE         = DATA_DIR . 'hmac.key';
 const GITHUB_WEBHOOK    = DATA_DIR . 'github.json';
 const SQL_FILE          = DATA_DIR . 'db.sql';
@@ -20,6 +21,17 @@ const EXCEPTION_HANDLER = '\Functions\exception_handler';
 const ERROR_HANDLER     = '\Functions\error_handler';
 const AUTOLOADER        = 'spl_autoload';
 const PRETTY_DATE       = 'D, M Y \a\t h:i A';
+
+const EMAILS           = [
+	'forgot-password' => [
+		'template' => TEMPLATES_DIR . 'email' . DIRECTORY_SEPARATOR . 'forgot-password.html',
+		'subject'  => 'Password Reset Requested',
+	],
+	'new-user'        => [
+		'template' => TEMPLATES_DIR . 'email' . DIRECTORY_SEPARATOR . 'new-user.html',
+		'subject'  => 'New Account Created',
+	],
+];
 
 const CLI = [
 	'cli',
