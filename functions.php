@@ -204,6 +204,31 @@ function get_person_id_for_user(PDO $pdo, int $id):? int
 	}
 }
 
+function get_user_id_for_person(PDO $pdo, int $id):? int
+{
+	$stm = $pdo->prepare('SELECT `person` FROM `users` WHERE `id` = :id LIMIT 1;');
+
+	if ($stm->execute([':id' => $id]) and $pid = $stm->fetchObject()) {
+		return $p->person;
+	} else {
+		return null;
+	}
+}
+
+function get_person_uuid_from_user_uuid(PDO $pdo, string $user):? string
+{
+	$stm = $pdo->prepare('SELECT `Person`.`identifier`
+		FROM `users`
+		LEFT OUTER JOIN `Person` ON `users`.`person` = `Person`.`id`
+		WHERE `users`.`uuid` = :uuid
+		LIMIT 1;');
+	if ($stm->execute([':uuid' => $user]) and $p = $stm->fetchObject()) {
+		return $p->identifier;
+	} else {
+		return null;
+	}
+}
+
 function get_address(PDO $pdo, int $id): ?object
 {
 	static $stm = null;

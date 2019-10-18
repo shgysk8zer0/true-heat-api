@@ -23,7 +23,7 @@ try {
 			if (! $user->loggedIn) {
 				throw new HTTPException('User data expired or invalid', HTTP::UNAUTHORIZED);
 			} elseif ($api->get->has('uuid')) {
-				if ($user->can('listUsers')) {
+				if ($user->uuid === $api->get->get('uuid') or $user->can('listUsers')) {
 					$stm = PDO::load()->prepare('SELECT `users`.`uuid` AS `identifier`,
 						`roles`.`name` AS `role`,
 						`roles`.`id` AS `roleId`,
