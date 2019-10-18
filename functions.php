@@ -1,7 +1,7 @@
 <?php
 
 namespace Functions;
-use const \Consts\{DEBUG, ERROR_LOG, UPLOADS_DIR, DATA_DIR, BASE, COMPOSER_AUTOLOAD};
+use const \Consts\{DEBUG, ERROR_LOG, UPLOADS_DIR, DATA_DIR, EMAIL_CREDS, BASE, COMPOSER_AUTOLOAD};
 use \shgysk8zer0\PHPAPI\{PDO, User, JSONFILE, Headers, HTTPException, Request, URL};
 use \shgysk8zer0\PHPAPI\Schema\{Person};
 use \shgysk8zer0\PHPAPI\Interfaces\{InputData};
@@ -14,9 +14,9 @@ use \ErrorException;
 // @SEE https://github.com/PHPMailer/PHPMailer/blob/master/README.md
 function mail(Person $from, Person $to, string $subject, string $body, bool $html = true): bool
 {
-	if (composer_autoloader()) {
+	if (@file_exists(EMAIL_CREDS) and composer_autoloader()) {
 		try {
-			$creds            = json_decode(file_get_contents(DATA_DIR . 'email.json'));
+			$creds            = json_decode(file_get_contents(EMAIL_CREDS));
 			$mail             = new PHPMailer(true);
 			// $mail->SMTPDebug  = SMTP::DEBUG_SERVER;                      // Enable verbose debug output
 			$mail->isSMTP();                                            // Send using SMTP

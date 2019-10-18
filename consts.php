@@ -9,6 +9,7 @@ const TEMPLATES_DIR     = BASE . 'templates' . DIRECTORY_SEPARATOR;
 const LOGS_DIR          = BASE . 'logs' . DIRECTORY_SEPARATOR;
 const UPLOADS_DIR       = BASE . 'uploads' . DIRECTORY_SEPARATOR;
 const CREDS_FILE        = DATA_DIR . 'creds.json';
+const EMAIL_CREDS       = DATA_DIR . 'email.json';
 const HMAC_FILE         = DATA_DIR . 'hmac.key';
 const GITHUB_WEBHOOK    = DATA_DIR . 'github.json';
 const SQL_FILE          = DATA_DIR . 'db.sql';
