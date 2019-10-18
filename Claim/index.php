@@ -102,6 +102,7 @@ try {
 					$attachments = $pdo->prepare('SELECT `Attachment`.`uuid`,
 						`Attachment`.`path`,
 						`Attachment`.`size`,
+						`Attachment`.`filename`,
 						`Attachment`.`mime`,
 						`Attachment`.`created`,
 						`Person`.`identifier` AS `userUUID`,
