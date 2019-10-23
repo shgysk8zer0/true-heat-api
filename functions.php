@@ -1,19 +1,52 @@
 <?php
 
 namespace Functions;
-use const \Consts\{DEBUG, ERROR_LOG, UPLOADS_DIR, BASE, COMPOSER_AUTOLOAD};
+use const \Consts\{DEBUG, ERROR_LOG, UPLOADS_DIR, DATA_DIR, EMAIL_CREDS, BASE, COMPOSER_AUTOLOAD};
 use \shgysk8zer0\PHPAPI\{PDO, User, JSONFILE, Headers, HTTPException, Request, URL};
+use \shgysk8zer0\PHPAPI\Schema\{Person};
 use \shgysk8zer0\PHPAPI\Interfaces\{InputData};
+use \PHPMailer\PHPMailer\{PHPMailer, SMTP, Exception};
 use \StdClass;
 use \DateTime;
 use \Throwable;
 use \ErrorException;
 
-// @TODO Use PHPMailer
 // @SEE https://github.com/PHPMailer/PHPMailer/blob/master/README.md
-function mail(): bool
+function mail(?Person $from, Person $to, string $subject, string $body, bool $html = true, ?StdClass $config = null): bool
 {
-	return true;
+	if ((isset($config) or @file_exists(EMAIL_CREDS)) and composer_autoloader()) {
+		try {
+			$creds            = isset($config) ? $config : json_decode(file_get_contents(EMAIL_CREDS));
+			$mail             = new PHPMailer(true);
+			// $mail->SMTPDebug  = SMTP::DEBUG_SERVER;                      // Enable verbose debug output
+			$mail->isSMTP();                                            // Send using SMTP
+			$mail->Host       = $creds->host;                    // Set the SMTP server to send through
+			$mail->SMTPAuth   = true;                                   // Enable SMTP authentication
+			$mail->Username   = $creds->username;                     // SMTP username
+			$mail->Password   = $creds->password;                               // SMTP password
+			$mail->SMTPSecure = $creds->starTLS === true ? PHPMailer::ENCRYPTION_STARTTLS : PHPMailer::ENCRYPTION_SMTPS;         // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` also accepted
+			$mail->Port       = $creds->port;                                    // TCP port to connect to
+
+			//Recipients
+			if (isset($from)) {
+				$mail->setFrom($from->email, "{$from->givenName} {$from->familyName}");
+			}
+			$mail->addAddress($to->email, "{$to->givenName} {$to->familyName}");     // Add a recipient
+			//$mail->AltBody
+
+			// Content
+			$mail->isHTML($html);                                  // Set email format to HTML
+			$mail->Subject = $subject;
+			$mail->Body    = $body;
+			// $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+			$mail->send();
+			return true;
+		} catch(Throwable $e) {
+			return false;
+		}
+	} else {
+		return false;
+	}
 }
 
 function composer_autoloader(): bool
@@ -358,7 +391,7 @@ function log_exception(Throwable $e): bool
 
 	if (is_null($stm)) {
 		$pdo = PDO::load();
-		$stm = $pdo->prepare('INSERT INTO `logs` (
+		$stm = $pdo->prepare('INSERT INTO `ServerErrors` (
 			`type`,
 			`message`,
 			`file`,

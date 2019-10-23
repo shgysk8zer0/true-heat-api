@@ -21,9 +21,9 @@ try {
 			$pdo->beginTransaction();
 
 			if (isset($req->post->person->password)) {
-				$np = $req->post->person->password->get('new');
-				$rp = $req->post->person->password->get('repeat');
-				$cp = $req->post->person->password->get('current');
+				$np = $req->post->person->password->get('new', false);
+				$rp = $req->post->person->password->get('repeat', false);
+				$cp = $req->post->person->password->get('current', false);
 				// @TODO Check given password->current matches current password
 				if (! $req->post->person->password->has('new', 'current', 'repeat')) {
 					throw new HTTPException('Missing one or more required password inputs', HTTP::BAD_REQUEST);
@@ -34,14 +34,8 @@ try {
 				} elseif (! is_string($np) or strlen($np) < 8) {
 					throw new HTTPException('Password too weak', HTTP::BAD_REQUEST);
 				} else {
-					$user_stm = $pdo->prepare('UPDATE `users` SET `password` = COALESCE(:new_pass, `password`)
-						WHERE `id` = :id
-						LIMIT 1;');
 
-					if (! ($user_stm->execute([
-						':new_pass' => password_hash($np, PASSWORD_DEFAULT),
-						':id'       => $user->id,
-					]) and $user_stm->rowCount() === 1)) {
+					if (! $user->changePassword($np)) {
 						throw new HTTPException('Error updating password', HTTP::INTERNAL_SERVER_ERROR);
 					}
 					unset($cp, $rp, $np);
