@@ -5,6 +5,7 @@ use \shgysk8zer0\PHPAPI\Abstracts\{HTTPStatusCodes as HTTP};
 use \DateTimeImmutable;
 use \Throwable;
 use \Template;
+use \Exception;
 use function \Functions\{get_user, mail};
 use const \Consts\{EMAILS, EMAIL_EXPIRES, PRETTY_DATE, CLIENT_URL};
 
