@@ -199,7 +199,7 @@ try {
 							':expires' => $date->format('Y-m-d H:i:s'),
 						]) and $reset_stm->rowCount() === 1) {
 							$tmp = new Template(EMAILS['new-user']['template']);
-							$url = new URL($url = new URL($req->referrer->origin););
+							$url = new URL($url = new URL($req->referrer->origin));
 							$url->hash = sprintf('#forgot-password/%s', $token);
 							$tmp->expires = $date->format(PRETTY_DATE);
 							$tmp->name = sprintf("{$user->person->givenName} {$user->person->familyName}");
