@@ -1,8 +1,12 @@
 <?php
 namespace Users;
-use \shgysk8zer0\PHPAPI\{API, User, UUID, PDO, Headers, HTTPException};
+use \shgysk8zer0\PHPAPI\{API, User, UUID, URL, PDO, Headers, HTTPException};
 use \shgysk8zer0\PHPAPI\Abstracts\{HTTPStatusCodes as HTTP};
-use function \Functions\{get_user};
+use \DateTimeImmutable;
+use \Throwable;
+use \Template;
+use function \Functions\{get_user, mail};
+use const \Consts\{EMAILS, EMAIL_EXPIRES, PRETTY_DATE, CLIENT_URL};
 
 function password_gen(int $length = 12): string
 {
@@ -118,6 +122,11 @@ try {
 			$pdo->beginTransaction();
 
 			try {
+				$pass_len = $req->post->has('password') ? strlen($req->post->get('password', false)) : 0;
+				$has_pass = $passlen > 7;
+				$hash = $has_pass ? password_hash($req->post->get('password', false), PASSWORD_DEFAULT)
+					: password_hash(base64_encode(new UUID()), PASSWORD_DEFAULT);
+
 				$user = $pdo->prepare('INSERT INTO `users` (
 					`uuid`,
 					`password`,
@@ -163,17 +172,54 @@ try {
 					throw new HTTPException('Error saving Person', HTTP::INTERNAL_SERVER_ERROR);
 				} elseif (! $user->execute([
 					':uuid'     => new UUID(),
-					':password' => password_hash($req->post->get('password', false, password_gen()), PASSWORD_DEFAULT),
+					':password' => $hash,
 					':person'   => $person_id,
 					':role'     => $req->post->get('role', false, 2),
 				]) or ! $user_id = $pdo->lastInsertId()) {
 					throw new HTTPException('Error creating user', HTTP::INTERNAL_SERVER_ERROR);
 				} else {
+					if (! $has_pass) {
+						$user = User::getUser($pdo, $user_id);
+						$date = new DateTimeImmutable(EMAIL_EXPIRES);
+						$token = new UUID();
+						$reset_stm = $pdo->prepare('INSERT INTO `PasswordReset` (
+							`token`,
+							`user`,
+							`expires`
+						) VALUES (
+							:token,
+							:user,
+							TIMESTAMP(:expires)
+						);');
+
+						if ($reset_stm->execute([
+							':token'  => $token,
+							':user'   => $user->id,
+							':expires' => $date->format('Y-m-d H:i:s'),
+						]) and $reset_stm->rowCount() === 1) {
+							$tmp = new Template(EMAILS['new-user']['template']);
+							$url = new URL(CLIENT_URL);
+							$url->hash = sprintf('#forgot-password/%s', $token);
+							$tmp->expires = $date->format(PRETTY_DATE);
+							$tmp->name = sprintf("{$user->person->givenName} {$user->person->familyName}");
+							$tmp->site = CLIENT_URL;
+							$tmp->url = $url;
+							$success = mail($from->person, $user->person, EMAILS['new-user']['subject'], $tmp);
+
+							if ($success) {
+								$pdo->commit();
+							} else {
+								throw new Exception('Error sending password reset email');
+							}
+						}
+					}
 					$pdo->commit();
 					Headers::status(HTTP::CREATED);
 				}
 			} catch (Throwable $e) {
-				$pdo->rollBack();
+				if ($pdo->inTransaction()) {
+					$pdo->rollBack();
+				}
 				throw $e;
 			}
 		}
