@@ -27,6 +27,7 @@ try {
 					echo $hook->pull() . PHP_EOL;
 					echo $hook->updateSubmodules() . PHP_EOL;
 					echo $hook->status();
+					`composer install`;
 				}
 				break;
 			default:
