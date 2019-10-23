@@ -12,11 +12,11 @@ use \Throwable;
 use \ErrorException;
 
 // @SEE https://github.com/PHPMailer/PHPMailer/blob/master/README.md
-function mail(Person $from, Person $to, string $subject, string $body, bool $html = true): bool
+function mail(?Person $from, Person $to, string $subject, string $body, bool $html = true, ?StdClass $config = null): bool
 {
-	if (@file_exists(EMAIL_CREDS) and composer_autoloader()) {
+	if ((isset($config) or @file_exists(EMAIL_CREDS)) and composer_autoloader()) {
 		try {
-			$creds            = json_decode(file_get_contents(EMAIL_CREDS));
+			$creds            = isset($config) ? $config : json_decode(file_get_contents(EMAIL_CREDS));
 			$mail             = new PHPMailer(true);
 			// $mail->SMTPDebug  = SMTP::DEBUG_SERVER;                      // Enable verbose debug output
 			$mail->isSMTP();                                            // Send using SMTP
@@ -24,11 +24,13 @@ function mail(Person $from, Person $to, string $subject, string $body, bool $htm
 			$mail->SMTPAuth   = true;                                   // Enable SMTP authentication
 			$mail->Username   = $creds->username;                     // SMTP username
 			$mail->Password   = $creds->password;                               // SMTP password
-			$mail->SMTPSecure = $creds->startTls ? PHPMailer::ENCRYPTION_STARTTLS : PHPMailer::ENCRYPTION_SMTPS;         // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` also accepted
+			$mail->SMTPSecure = $creds->starTLS === true ? PHPMailer::ENCRYPTION_STARTTLS : PHPMailer::ENCRYPTION_SMTPS;         // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` also accepted
 			$mail->Port       = $creds->port;                                    // TCP port to connect to
 
 			//Recipients
-			$mail->setFrom($from->email, "{$from->givenName} {$from->familyName}");
+			if (isset($from)) {
+				$mail->setFrom($from->email, "{$from->givenName} {$from->familyName}");
+			}
 			$mail->addAddress($to->email, "{$to->givenName} {$to->familyName}");     // Add a recipient
 			//$mail->AltBody
 
@@ -389,7 +391,7 @@ function log_exception(Throwable $e): bool
 
 	if (is_null($stm)) {
 		$pdo = PDO::load();
-		$stm = $pdo->prepare('INSERT INTO `logs` (
+		$stm = $pdo->prepare('INSERT INTO `ServerErrors` (
 			`type`,
 			`message`,
 			`file`,

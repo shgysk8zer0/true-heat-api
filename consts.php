@@ -6,6 +6,7 @@ const CLASSES_DIR       = BASE . 'classes' . DIRECTORY_SEPARATOR;
 const VENDOR_DIR        = BASE . 'vendor' . DIRECTORY_SEPARATOR;
 const DATA_DIR          = BASE . 'data' . DIRECTORY_SEPARATOR;
 const TEMPLATES_DIR     = BASE . 'templates' . DIRECTORY_SEPARATOR;
+const EMAIL_TEMPLATES   = TEMPLATES_DIR . 'email' . DIRECTORY_SEPARATOR;
 const LOGS_DIR          = BASE . 'logs' . DIRECTORY_SEPARATOR;
 const UPLOADS_DIR       = BASE . 'uploads' . DIRECTORY_SEPARATOR;
 const CREDS_FILE        = DATA_DIR . 'creds.json';
@@ -20,7 +21,8 @@ const TIMEZONE          = 'America/Los_Angeles';
 const EXCEPTION_HANDLER = '\Functions\exception_handler';
 const ERROR_HANDLER     = '\Functions\error_handler';
 const AUTOLOADER        = 'spl_autoload';
-const PRETTY_DATE       = 'D, M Y \a\t h:i A';
+const PRETTY_DATE       = 'D, M j Y \a\t h:i A';
+const CLIENT_URL        = 'http://localhost:8888';
 
 const EMAILS           = [
 	'forgot-password' => [
