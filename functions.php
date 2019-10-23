@@ -16,7 +16,23 @@ function mail(?Person $from, Person $to, string $subject, string $body, bool $ht
 {
 	if ((isset($config) or @file_exists(EMAIL_CREDS)) and composer_autoloader()) {
 		try {
-			$creds            = isset($config) ? $config : json_decode(file_get_contents(EMAIL_CREDS));
+			$creds = isset($config) ? $config : json_decode(file_get_contents(EMAIL_CREDS));
+			if (is_null($from)) {
+				$pdo = PDO::load();
+
+				$usr_stm = $pdo->prepare('SELECT `users`.`id` FROM `Person`
+				JOIN `users` ON `users`.`person` = `Person`.`id`
+				WHERE `Person`.`email` = :username
+				LIMIT 1;');
+
+				if ($usr_stm->execute([':username' => $creds->username]) and $usr_obj = $usr_stm->fetchObject()) {
+					$user = User::getUser($pdo, $usr_obj->id);
+					$from = $user->person;
+					unset($usr_stm, $usr_obj, $user);
+				} else {
+					return false;
+				}
+			}
 			$mail             = new PHPMailer(true);
 			// $mail->SMTPDebug  = SMTP::DEBUG_SERVER;                      // Enable verbose debug output
 			$mail->isSMTP();                                            // Send using SMTP

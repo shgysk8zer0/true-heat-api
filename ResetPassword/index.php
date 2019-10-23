@@ -107,7 +107,7 @@ try {
 						$url->hash = sprintf('#forgot-password/%s', $token);
 						$tmp->expires = $date->format(PRETTY_DATE);
 						$tmp->url = $url;
-						$from = User::getUser($pdo, 11);
+						// $from = User::getUser($pdo, 11);
 						$success = mail($from->person, $user->person, EMAILS['forgot-password']['subject'], $tmp);
 
 						if ($success) {
@@ -124,7 +124,7 @@ try {
 						'line'    => $e->getLine(),
 						'trace'   => $e->getTrace(),
 					]], JSON_PRETTY_PRINT));
-					if ($pdo->inTranscation()) {
+					if ($pdo->inTransaction()) {
 						$pdo->rollback();
 					}
 				}
